@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: credit-decision
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: credit-decision
+  template:
+    metadata:
+      labels:
+        app: credit-decision
+    spec:
+      containers:
+      - name: credit-decision
+        image: credit-decision:latest
+        ports:
+        - containerPort: 5005
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: credit-decision
+spec:
+  selector:
+    app: credit-decision
+  ports:
+    - protocol: TCP
+      port: 5005
+      targetPort: 5005

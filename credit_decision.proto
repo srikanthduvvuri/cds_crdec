@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+service CreditDecisionService {
+  rpc EvaluateApplication (CreditDecisionRequest) returns (CreditDecision) {}
+}
+
+message CreditDecisionRequest {
+  string applicant_id = 1;
+  double income = 2;
+  double loan_amount = 3;
+  int32 credit_history = 4;
+  int32 delinquencies = 5;
+}
+
+message CreditDecision {
+  string status = 1;
+  double interest_rate = 2;
+  string reason = 3;
+  double risk_score = 4;
+}
