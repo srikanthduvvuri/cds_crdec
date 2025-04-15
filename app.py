@@ -3,10 +3,15 @@ import grpc
 import credit_decision_pb2
 import credit_decision_pb2_grpc
 import requests
+import logging
+import time
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 class CreditDecisionServicer(credit_decision_pb2_grpc.CreditDecisionServiceServicer):
     def EvaluateApplication(self, request, context):
-        print("Received application for evaluation")
+        logger.info(f"creditdecisionservice - Received application for evaluation")
         applicant_info = {
             'applicant_id': request.applicant_id,
             'income': request.income,
@@ -15,12 +20,17 @@ class CreditDecisionServicer(credit_decision_pb2_grpc.CreditDecisionServiceServi
             'delinquencies': request.delinquencies,
         }
 
-        print(f" Performing Risk Scoring for applicant ID: {applicant_info['applicant_id']}")
+        logger.info(f" Performing Risk Scoring for applicant ID: {applicant_info['applicant_id']}")
+        start_time = time.time()
         risk_score = requests.post("http://risk-scoring-engine:5003/risk-score", json={"applicant_info": applicant_info}).json()["risk_score"]
         # risk_score = requests.post("http://localhost:5003/risk-score", json={"applicant_info": applicant_info}).json()["risk_score"]
-        print(f" Performing Underwriting for applicant ID {applicant_info['applicant_id']} with risk score : {risk_score}")
+        logger.info(f" Risk Scoring took {time.time() - start_time:.2f}s")
+
+        start_time = time.time()
+        logger.info(f" Performing Underwriting for applicant ID {applicant_info['applicant_id']} with risk score : {risk_score}")
         underwriting = requests.post("http://credit-underwriting:5004/underwrite", json={"applicant_info": applicant_info, "risk_score": risk_score}).json()
         # underwriting = requests.post("http://localhost:5004/underwrite", json={"applicant_info": applicant_info, "risk_score": risk_score}).json()
+        logger.info(f" Underwriting took {time.time() - start_time:.2f}s")
 
         return credit_decision_pb2.CreditDecision(
             status=underwriting["status"],
@@ -34,9 +44,9 @@ def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     credit_decision_pb2_grpc.add_CreditDecisionServiceServicer_to_server(CreditDecisionServicer(), server)
     server.add_insecure_port('[::]:5005')
-    print(" Starting Credit Decision server on port 5005...")
+    logger.info(" Starting Credit Decision server on port 5005...")
     server.start()
-    print(" Credit Decision server started")
+    logger.info(" Credit Decision server started")
     server.wait_for_termination()
 
 if __name__ == '__main__':
