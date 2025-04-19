@@ -7,13 +7,11 @@ class MockContext:
 def test_evaluate_application(monkeypatch):
     servicer = CreditDecisionServicer()
     request = credit_decision_pb2.CreditDecisionRequest(
-        applicant_info=credit_decision_pb2.ApplicantInfo(
             applicant_id="123",
             income=60000,
             loan_amount=100000,
             credit_history=40,
             delinquencies=0
-        )
     )
 
     monkeypatch.setattr("requests.post", lambda url, json: MockResponse(url))
