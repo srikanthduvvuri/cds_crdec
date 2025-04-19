@@ -5,6 +5,12 @@ import credit_decision_pb2_grpc
 import requests
 import logging
 import time
+import os
+from dotenv import load_dotenv
+
+# Only load .env.local when not running in Docker
+if os.getenv("DOCKER_ENV") != "true":
+    load_dotenv(dotenv_path=".env.local")
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -22,13 +28,18 @@ class CreditDecisionServicer(credit_decision_pb2_grpc.CreditDecisionServiceServi
 
         logger.info(f" Performing Risk Scoring for applicant ID: {applicant_info['applicant_id']}")
         start_time = time.time()
-        risk_score = requests.post("http://risk-scoring-engine:5003/risk-score", json={"applicant_info": applicant_info}).json()["risk_score"]
+        RSE_HOST = os.getenv("RISKSCORINGENGINE_HOST", "localhost:5003")
+        risk_score = requests.post(f"http://{RSE_HOST}/risk-score", json={"applicant_info": applicant_info}).json()["risk_score"]
+        # risk_score = requests.post("http://risk-scoring-engine:5003/risk-score", json={"applicant_info": applicant_info}).json()["risk_score"]
         # risk_score = requests.post("http://localhost:5003/risk-score", json={"applicant_info": applicant_info}).json()["risk_score"]
         logger.info(f" Risk Scoring took {time.time() - start_time:.2f}s")
 
         start_time = time.time()
         logger.info(f" Performing Underwriting for applicant ID {applicant_info['applicant_id']} with risk score : {risk_score}")
-        underwriting = requests.post("http://credit-underwriting:5004/underwrite", json={"applicant_info": applicant_info, "risk_score": risk_score}).json()
+        UW_HOST = os.getenv("CREDITUNDERWRITING_HOST", "localhost:5004")
+        logger.info(f"value of UW_HOST from env : {UW_HOST}")
+        underwriting = requests.post(f"http://{UW_HOST}/underwrite", json={"applicant_info": applicant_info, "risk_score": risk_score}).json()
+        # underwriting = requests.post("http://credit-underwriting:5004/underwrite", json={"applicant_info": applicant_info, "risk_score": risk_score}).json()
         # underwriting = requests.post("http://localhost:5004/underwrite", json={"applicant_info": applicant_info, "risk_score": risk_score}).json()
         logger.info(f" Underwriting took {time.time() - start_time:.2f}s")
 
