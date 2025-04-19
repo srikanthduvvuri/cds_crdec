@@ -6,7 +6,7 @@ class MockContext:
 
 def test_evaluate_application(monkeypatch):
     servicer = CreditDecisionServicer()
-    request = credit_decision_pb2.CreditRequest(
+    request = credit_decision_pb2.CreditDecisionRequest(
         applicant_info=credit_decision_pb2.ApplicantInfo(
             applicant_id="123",
             income=60000,
