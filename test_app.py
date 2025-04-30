@@ -18,7 +18,7 @@ def test_evaluate_application(monkeypatch):
 
     result = servicer.EvaluateApplication(request, MockContext())
     assert result.status in ["approved", "rejected"]
-    assert isinstance(result.risk_score, int)
+    assert isinstance(result.risk_score, float)
 
 class MockResponse:
     def __init__(self, url):
